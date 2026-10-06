@@ -1,7 +1,11 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use sqlx::postgres::PgPoolOptions;
-use task_api::{config::Config, state::AppState};
+use task_api::{
+    cache::{MemoryTaskCache, RedisTaskCache, TaskCache},
+    config::{CacheBackend, Config},
+    state::AppState,
+};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -22,8 +26,9 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("./migrations").run(&db).await?;
     tracing::info!("database migrations applied");
 
+    let cache = build_cache(&config).await?;
     let bind_addr = config.bind_addr.clone();
-    let app = task_api::build_app(AppState::new(db, config));
+    let app = task_api::build_app(AppState::new(db, config, cache));
 
     let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
     tracing::info!("listening on http://{bind_addr} (Swagger UI at /swagger-ui)");
@@ -31,6 +36,21 @@ async fn main() -> anyhow::Result<()> {
         .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
+}
+
+async fn build_cache(config: &Config) -> anyhow::Result<Arc<dyn TaskCache>> {
+    Ok(match config.cache_backend {
+        CacheBackend::Redis => {
+            let cache =
+                RedisTaskCache::connect(&config.redis_url, config.cache_ttl_seconds).await?;
+            tracing::info!("task cache: redis ({})", config.redis_url);
+            Arc::new(cache)
+        }
+        CacheBackend::Memory => {
+            tracing::warn!("task cache: in-memory (per process; not shared between instances)");
+            Arc::new(MemoryTaskCache::new(config.cache_ttl_seconds))
+        }
+    })
 }
 
 async fn shutdown_signal() {

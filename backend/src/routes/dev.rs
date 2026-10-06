@@ -16,7 +16,7 @@ use crate::{
 
 #[derive(Serialize, ToSchema)]
 pub struct MessageResponse {
-    #[schema(example = "Tasks, login challenges and email logs cleared")]
+    #[schema(example = "Tasks, login challenges, email logs and task cache cleared")]
     pub message: String,
 }
 
@@ -36,8 +36,9 @@ pub async fn reset(State(state): State<AppState>) -> AppResult<Json<MessageRespo
     sqlx::query("TRUNCATE tasks, email_logs, login_challenges")
         .execute(&state.db)
         .await?;
+    state.cache.clear().await?;
     Ok(Json(MessageResponse {
-        message: "Tasks, login challenges and email logs cleared".into(),
+        message: "Tasks, login challenges, email logs and task cache cleared".into(),
     }))
 }
 

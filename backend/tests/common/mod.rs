@@ -8,7 +8,12 @@ use axum::{
 use http_body_util::BodyExt;
 use serde_json::Value;
 use sqlx::PgPool;
-use task_api::{config::Config, state::AppState};
+use std::sync::Arc;
+use task_api::{
+    cache::{MemoryTaskCache, TaskCache},
+    config::Config,
+    state::AppState,
+};
 use tower::ServiceExt;
 
 pub fn test_config() -> Config {
@@ -33,7 +38,12 @@ pub fn app(pool: PgPool) -> Router {
 }
 
 pub fn app_with_config(pool: PgPool, config: Config) -> Router {
-    task_api::build_app(AppState::new(pool, config))
+    let cache = Arc::new(MemoryTaskCache::new(config.cache_ttl_seconds));
+    app_with_cache(pool, config, cache)
+}
+
+pub fn app_with_cache(pool: PgPool, config: Config, cache: Arc<dyn TaskCache>) -> Router {
+    task_api::build_app(AppState::new(pool, config, cache))
 }
 
 /// Sends a JSON request through the router and returns status + parsed body (Null if empty).

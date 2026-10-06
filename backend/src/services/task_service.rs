@@ -65,6 +65,11 @@ pub async fn assign_tasks(
     let updated_count = task_repo::assign(&mut tx, &req.task_ids, assignee.id).await?;
     tx.commit().await?;
 
+    // After commit: the new assignee's list grew, and previous assignees' lists shrank.
+    let mut affected: BTreeSet<Uuid> = locked.iter().filter_map(|(_, prev)| *prev).collect();
+    affected.insert(assignee.id);
+    invalidate(state, affected.into_iter().collect()).await;
+
     Ok(AssignTasksResponse {
         assigned_to: assignee.email,
         task_ids: req.task_ids,
@@ -105,11 +110,23 @@ pub async fn update_task(
     let updated = task_repo::update(&state.db, task_id, changes)
         .await?
         .ok_or_else(|| AppError::NotFound("Task not found".into()))?;
+
+    if let Some(assignee_id) = updated.assigned_to_id {
+        invalidate(state, vec![assignee_id]).await;
+    }
     Ok(updated.into())
 }
 
-/// Tasks assigned to `user`, plus whether the result came from cache.
+/// Tasks assigned to `user` (cache-aside), plus whether the result came from cache.
 pub async fn my_tasks(state: &AppState, user: &AuthUser) -> AppResult<(MyTasksPayload, bool)> {
+    match state.cache.get_my_tasks(user.id).await {
+        Ok(Some(payload)) => return Ok((payload, true)),
+        Ok(None) => {}
+        Err(err) => {
+            tracing::warn!(error = %err, user_id = %user.id, "task cache read failed; using database")
+        }
+    }
+
     let tasks: Vec<TaskDto> = task_repo::list_assigned_to(&state.db, user.id)
         .await?
         .into_iter()
@@ -121,5 +138,16 @@ pub async fn my_tasks(state: &AppState, user: &AuthUser) -> AppResult<(MyTasksPa
         },
         tasks,
     };
+
+    if let Err(err) = state.cache.set_my_tasks(user.id, &payload).await {
+        tracing::warn!(error = %err, user_id = %user.id, "task cache write failed");
+    }
     Ok((payload, false))
+}
+
+/// Best effort: a failed invalidation is logged, and the TTL bounds how long data can be stale.
+async fn invalidate(state: &AppState, user_ids: Vec<Uuid>) {
+    if let Err(err) = state.cache.invalidate(&user_ids).await {
+        tracing::warn!(error = %err, ?user_ids, "task cache invalidation failed");
+    }
 }
