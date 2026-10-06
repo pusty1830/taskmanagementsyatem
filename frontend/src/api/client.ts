@@ -37,7 +37,13 @@ export async function request<T>(method: string, path: string, body?: unknown): 
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
-    throw new ApiError(0, 'network_error', `Cannot reach the API at ${API_BASE_URL}. Is the backend running?`)
+    // Browsers report a CORS rejection exactly like an unreachable server, so mention both.
+    throw new ApiError(
+      0,
+      'network_error',
+      `Cannot reach the API at ${API_BASE_URL}. Is the backend running? ` +
+        `If it is, check that the backend's CORS_ORIGIN allows ${window.location.origin}.`,
+    )
   }
 
   const data: unknown = await res.json().catch(() => null)

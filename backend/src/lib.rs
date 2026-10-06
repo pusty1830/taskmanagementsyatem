@@ -27,14 +27,20 @@ use crate::{openapi::ApiDoc, state::AppState};
 const MAX_BODY_BYTES: usize = 64 * 1024;
 
 pub fn build_app(state: AppState) -> Router {
+    // CORS_ORIGIN is a comma-separated list, e.g. "http://localhost:5173,http://127.0.0.1:5173".
+    let origins: Vec<HeaderValue> = state
+        .config
+        .cors_origin
+        .split(',')
+        .map(str::trim)
+        .filter(|o| !o.is_empty())
+        .map(|o| {
+            o.parse()
+                .expect("CORS_ORIGIN entries must be valid origins")
+        })
+        .collect();
     let cors = CorsLayer::new()
-        .allow_origin(
-            state
-                .config
-                .cors_origin
-                .parse::<HeaderValue>()
-                .expect("CORS_ORIGIN must be a valid origin"),
-        )
+        .allow_origin(origins)
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::OPTIONS])
         .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]);
 

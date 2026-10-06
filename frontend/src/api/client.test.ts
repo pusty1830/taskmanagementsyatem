@@ -44,5 +44,7 @@ describe('api client', () => {
     const err = await request('GET', '/health').catch((e: unknown) => e)
 
     expect(err).toMatchObject({ status: 0, code: 'network_error' })
+    // A CORS rejection looks identical to a down server, so the message names the page origin too.
+    expect((err as Error).message).toContain(`CORS_ORIGIN allows ${window.location.origin}`)
   })
 })

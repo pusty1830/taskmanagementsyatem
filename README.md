@@ -326,7 +326,17 @@ CI runs both suites (`.github/workflows/ci.yml`).
 
 See [`screenshots/`](screenshots/).
 
-## 8. Known limitations / trade-offs
+## 8. Troubleshooting
+
+**"Cannot reach the API at http://localhost:8080"** in the frontend:
+
+1. Check the backend: `curl http://localhost:8080/health` should return `{"status":"ok","database":"ok"}`.
+2. If the backend is up, the browser blocked the request with **CORS**. The page's origin must appear in the backend's `CORS_ORIGIN`, a comma-separated list. The default is `http://localhost:5173,http://127.0.0.1:5173`.
+3. **Don't run `npm run dev` while the Docker frontend is up.** Both want port 5173. Vite uses `strictPort` and will refuse to start rather than move to 5174, which CORS would block. Either:
+   - use the Docker frontend at http://localhost:5173, or
+   - run `docker compose stop frontend` first, then `npm run dev`.
+
+## 9. Known limitations / trade-offs
 
 - **Dev mailbox:** `email_logs.body` holds the code because it stands in for an inbox. The verification record itself stores only an HMAC. The table and its endpoint exist only when `APP_ENV=development`.
 - **Role changes and tokens:** the JWT's role claim is trusted until the token expires (60 min). There are no refresh tokens.
