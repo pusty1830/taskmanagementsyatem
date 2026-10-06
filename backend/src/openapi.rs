@@ -22,6 +22,12 @@ use crate::{error, routes};
         routes::auth::login,
         routes::auth::verify_2fa,
         routes::auth::me,
+        routes::users::list_users,
+        routes::tasks::create_task,
+        routes::tasks::list_tasks,
+        routes::tasks::assign_tasks,
+        routes::tasks::update_task,
+        routes::tasks::view_my_tasks,
     ),
     components(schemas(
         error::ErrorResponse,
@@ -36,6 +42,17 @@ use crate::{error, routes};
         crate::dto::auth::LoginResponse,
         crate::dto::auth::Verify2faRequest,
         crate::dto::auth::TokenResponse,
+        crate::domain::TaskStatus,
+        crate::domain::TaskPriority,
+        crate::dto::task::TaskDto,
+        crate::dto::task::CreateTaskRequest,
+        crate::dto::task::AssignTasksRequest,
+        crate::dto::task::AssignTasksResponse,
+        crate::dto::task::UpdateTaskRequest,
+        crate::dto::task::MyTasksResponse,
+        crate::dto::task::MyTasksUser,
+        crate::dto::task::TaskSummary,
+        crate::dto::task::CacheMeta,
     )),
     modifiers(&BearerAuth),
     tags(
@@ -43,6 +60,8 @@ use crate::{error, routes};
         (name = "seed", description = "Create validation users (development only)"),
         (name = "dev", description = "Development helpers: dev mailbox, reset (development only)"),
         (name = "auth", description = "Email + password login with email 2FA, then JWT"),
+        (name = "users", description = "User directory (admin only)"),
+        (name = "tasks", description = "Task management with role-based access and per-user caching"),
     )
 )]
 pub struct ApiDoc;

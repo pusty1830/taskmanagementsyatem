@@ -40,3 +40,19 @@ pub struct User {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+/// Task row joined with the creator's and assignee's emails (the API identifies users by email).
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct Task {
+    pub id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub status: TaskStatus,
+    pub priority: TaskPriority,
+    pub created_by_id: Uuid,
+    pub assigned_to_id: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by_email: String,
+    pub assigned_to_email: Option<String>,
+}

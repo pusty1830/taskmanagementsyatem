@@ -3,14 +3,15 @@ use uuid::Uuid;
 
 use crate::domain::{Role, User};
 
-const USER_COLUMNS: &str =
-    "id, full_name, email, hashed_password, role, created_at, updated_at";
+const USER_COLUMNS: &str = "id, full_name, email, hashed_password, role, created_at, updated_at";
 
 pub async fn find_by_email(db: &PgPool, email: &str) -> sqlx::Result<Option<User>> {
-    sqlx::query_as::<_, User>(&format!("SELECT {USER_COLUMNS} FROM users WHERE email = $1"))
-        .bind(email)
-        .fetch_optional(db)
-        .await
+    sqlx::query_as::<_, User>(&format!(
+        "SELECT {USER_COLUMNS} FROM users WHERE email = $1"
+    ))
+    .bind(email)
+    .fetch_optional(db)
+    .await
 }
 
 pub async fn find_by_id(db: &PgPool, id: Uuid) -> sqlx::Result<Option<User>> {

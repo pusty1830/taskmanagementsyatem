@@ -22,7 +22,10 @@ async fn seed_creates_admin_and_james_idempotently(pool: PgPool) {
 
     let (status, second) = common::post(&app, "/seed/users", None, json!({})).await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(first["users"], second["users"], "re-seeding must not create new users");
+    assert_eq!(
+        first["users"], second["users"],
+        "re-seeding must not create new users"
+    );
 
     let count: i64 = sqlx::query_scalar("SELECT count(*) FROM users")
         .fetch_one(&pool)

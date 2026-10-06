@@ -62,7 +62,14 @@ pub async fn start_login(
 
     let mut tx = state.db.begin().await?;
     challenge_repo::invalidate_pending(&mut tx, user.id).await?;
-    challenge_repo::insert(&mut tx, challenge_id, user.id, &code_hash, cfg.otp_ttl_seconds).await?;
+    challenge_repo::insert(
+        &mut tx,
+        challenge_id,
+        user.id,
+        &code_hash,
+        cfg.otp_ttl_seconds,
+    )
+    .await?;
     tx.commit().await?;
 
     state
@@ -78,7 +85,11 @@ pub async fn start_login(
 }
 
 /// Step 2: verify the code (single use, unexpired, attempt-limited) and issue the JWT.
-pub async fn verify_login(state: &AppState, challenge_id: Uuid, code: &str) -> AppResult<VerifiedLogin> {
+pub async fn verify_login(
+    state: &AppState,
+    challenge_id: Uuid,
+    code: &str,
+) -> AppResult<VerifiedLogin> {
     let cfg = &state.config;
     let mut tx = state.db.begin().await?;
 
@@ -107,7 +118,8 @@ pub async fn verify_login(state: &AppState, challenge_id: Uuid, code: &str) -> A
     let user = user_repo::find_by_id(&state.db, challenge.user_id)
         .await?
         .ok_or_else(|| anyhow::anyhow!("challenge references a missing user"))?;
-    let (token, expires_in_seconds) = jwt::issue_token(&user, &cfg.jwt_secret, cfg.jwt_ttl_minutes)?;
+    let (token, expires_in_seconds) =
+        jwt::issue_token(&user, &cfg.jwt_secret, cfg.jwt_ttl_minutes)?;
 
     Ok(VerifiedLogin {
         token,

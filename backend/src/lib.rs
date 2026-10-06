@@ -14,7 +14,7 @@ pub mod state;
 use axum::{
     extract::DefaultBodyLimit,
     http::{header, HeaderValue, Method},
-    routing::{get, post},
+    routing::{get, patch, post},
     Router,
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -41,7 +41,15 @@ pub fn build_app(state: AppState) -> Router {
         .route("/health", get(routes::health::health))
         .route("/auth/login", post(routes::auth::login))
         .route("/auth/verify-2fa", post(routes::auth::verify_2fa))
-        .route("/auth/me", get(routes::auth::me));
+        .route("/auth/me", get(routes::auth::me))
+        .route("/users", get(routes::users::list_users))
+        .route(
+            "/tasks",
+            post(routes::tasks::create_task).get(routes::tasks::list_tasks),
+        )
+        .route("/tasks/assign", post(routes::tasks::assign_tasks))
+        .route("/tasks/view-my-tasks", get(routes::tasks::view_my_tasks))
+        .route("/tasks/{id}", patch(routes::tasks::update_task));
 
     if state.config.is_development() {
         router = router.merge(dev_routes());

@@ -134,3 +134,48 @@ pub fn wrong_code(code: &str) -> String {
     let n: u32 = code.parse().unwrap();
     format!("{:06}", (n + 1) % 1_000_000)
 }
+
+pub async fn patch(
+    app: &Router,
+    path: &str,
+    token: Option<&str>,
+    body: Value,
+) -> (StatusCode, Value) {
+    send(app, Method::PATCH, path, token, Some(body)).await
+}
+
+/// Creates a task as `token`'s user and returns its id (asserts 201).
+pub async fn create_task(app: &Router, token: &str, title: &str, priority: &str) -> String {
+    let (status, body) = post(
+        app,
+        "/tasks",
+        Some(token),
+        serde_json::json!({ "title": title, "description": format!("{title} details"), "priority": priority }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "create task failed: {body}");
+    body["id"].as_str().unwrap().to_string()
+}
+
+pub async fn assign(
+    app: &Router,
+    token: &str,
+    task_ids: &[String],
+    email: &str,
+) -> (StatusCode, Value) {
+    post(
+        app,
+        "/tasks/assign",
+        Some(token),
+        serde_json::json!({ "task_ids": task_ids, "assignee_email": email }),
+    )
+    .await
+}
+
+/// Seeds users and returns (admin_token, james_token).
+pub async fn seeded_tokens(app: &Router) -> (String, String) {
+    seed(app).await;
+    let admin = login(app, ADMIN_EMAIL, ADMIN_PASSWORD).await;
+    let james = login(app, JAMES_EMAIL, JAMES_PASSWORD).await;
+    (admin, james)
+}

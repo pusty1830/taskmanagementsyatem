@@ -20,7 +20,10 @@ impl AuthUser {
 impl FromRequestParts<AppState> for AuthUser {
     type Rejection = AppError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
         let token = parts
             .headers
             .get(axum::http::header::AUTHORIZATION)
@@ -46,7 +49,10 @@ pub struct AdminUser(pub AuthUser);
 impl FromRequestParts<AppState> for AdminUser {
     type Rejection = AppError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
         let user = AuthUser::from_request_parts(parts, state).await?;
         if !user.is_admin() {
             return Err(AppError::Forbidden(forbidden_message(parts)));

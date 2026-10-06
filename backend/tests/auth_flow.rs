@@ -22,7 +22,10 @@ async fn login_returns_challenge_not_token(pool: PgPool) {
     assert_eq!(status, StatusCode::OK);
     assert!(Uuid::parse_str(body["login_challenge_id"].as_str().unwrap()).is_ok());
     assert_eq!(body["expires_in_seconds"], 300);
-    assert!(body.get("access_token").is_none(), "login must not issue a JWT");
+    assert!(
+        body.get("access_token").is_none(),
+        "login must not issue a JWT"
+    );
 }
 
 #[sqlx::test(migrations = "./migrations")]
@@ -64,7 +67,10 @@ async fn wrong_password_and_unknown_email_give_same_401(pool: PgPool) {
     assert_eq!(s1, StatusCode::UNAUTHORIZED);
     assert_eq!(s2, StatusCode::UNAUTHORIZED);
     assert_eq!(wrong_pw["error"]["code"], "unauthorized");
-    assert_eq!(wrong_pw, unknown, "responses must not reveal which emails exist");
+    assert_eq!(
+        wrong_pw, unknown,
+        "responses must not reveal which emails exist"
+    );
 }
 
 #[sqlx::test(migrations = "./migrations")]

@@ -41,7 +41,14 @@ impl Mailer for DevMailer {
         let body = format!(
             "Your verification code is {code}. It expires in {ttl_minutes} minutes and can be used once."
         );
-        email_log_repo::insert(&self.db, to, VERIFICATION_SUBJECT, &body, Some(challenge_id)).await?;
+        email_log_repo::insert(
+            &self.db,
+            to,
+            VERIFICATION_SUBJECT,
+            &body,
+            Some(challenge_id),
+        )
+        .await?;
         tracing::info!(%challenge_id, "[dev-mail] 2FA code for {to}: {code}");
         Ok(())
     }
