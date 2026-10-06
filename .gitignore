@@ -1,0 +1,17 @@
+# env
+.env
+*.local
+
+# rust
+backend/target/
+
+# node
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# tooling
+.superpowers/
+.idea/
+.vscode/
+*.log
