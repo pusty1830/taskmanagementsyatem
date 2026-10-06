@@ -43,7 +43,7 @@ A small full-stack task manager that runs the assignment's validation flow from 
 
 | Concern | Choice | Why |
 |---|---|---|
-| Framework | **React 18 + TypeScript**, built with **Vite** | Fast dev server; types mirror the API DTOs |
+| Framework | **React 19 + TypeScript**, built with **Vite** | Fast dev server; types mirror the API DTOs |
 | Routing | **React Router** | Login, admin and staff screens |
 | HTTP | Thin `fetch` wrapper (`src/api/client.ts`) | Attaches the JWT and maps errors to a typed `ApiError`. No extra dependency |
 | State | React Context for auth plus a small `useAsync` hook | Easy to explain. Server data is fetched on demand, so client-side caching never masks `cache.hit` |

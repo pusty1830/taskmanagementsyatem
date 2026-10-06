@@ -181,3 +181,14 @@ Both are documented in the README:
 
 1. **Docker (recommended for reviewers):** `docker compose up --build` runs all four services.
 2. **Native (for development):** `docker compose up -d postgres redis`, then `cargo run` in `backend/` and `npm run dev` in `frontend/`. This gives hot reload.
+
+## Host port conflicts
+
+The published host ports are configurable in `.env`:
+
+```dotenv
+POSTGRES_HOST_PORT=5432   # e.g. 5434 if a local PostgreSQL already uses 5432
+REDIS_HOST_PORT=6379      # e.g. 6380 if another Redis already uses 6379
+```
+
+When running the backend natively, keep `DATABASE_URL` and `REDIS_URL` in sync with these ports. Inside the Compose network the services always talk on the default ports.

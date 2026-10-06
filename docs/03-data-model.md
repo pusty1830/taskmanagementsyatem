@@ -48,7 +48,7 @@ erDiagram
 
 ## Migrations
 
-### `0001_create_enums_and_users.sql`
+### `20261006000001_create_enums_and_users.sql`
 
 ```sql
 CREATE TYPE user_role     AS ENUM ('admin', 'staff');
@@ -66,7 +66,7 @@ CREATE TABLE users (
 );
 ```
 
-### `0002_create_tasks.sql`
+### `20261006000002_create_tasks.sql`
 
 ```sql
 CREATE TABLE tasks (
@@ -83,7 +83,7 @@ CREATE TABLE tasks (
 CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to_id);
 ```
 
-### `0003_create_login_challenges_and_email_logs.sql`
+### `20261006000003_create_login_challenges_and_email_logs.sql`
 
 ```sql
 CREATE TABLE login_challenges (

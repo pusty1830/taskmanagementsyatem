@@ -87,9 +87,9 @@ task/
 │   ├── Cargo.toml
 │   ├── Dockerfile             # multi-stage: cargo-chef → debian-slim runtime
 │   ├── migrations/
-│   │   ├── 0001_create_enums_and_users.sql
-│   │   ├── 0002_create_tasks.sql
-│   │   └── 0003_create_login_challenges_and_email_logs.sql
+│   │   ├── 20261006000001_create_enums_and_users.sql
+│   │   ├── 20261006000002_create_tasks.sql
+│   │   └── 20261006000003_create_login_challenges_and_email_logs.sql
 │   ├── src/
 │   │   ├── main.rs            # load config, tracing, pool, migrate, serve
 │   │   ├── lib.rs             # build_app(), module wiring

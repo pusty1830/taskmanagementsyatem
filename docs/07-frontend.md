@@ -1,4 +1,4 @@
-# 7. Frontend (React + TypeScript + Vite)
+# 7. Frontend (React 19 + TypeScript + Vite)
 
 ## Screens and routes
 
