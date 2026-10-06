@@ -2,7 +2,9 @@ pub mod auth;
 pub mod config;
 pub mod domain;
 pub mod dto;
+pub mod email;
 pub mod error;
+pub mod extract;
 pub mod openapi;
 pub mod repositories;
 pub mod routes;
@@ -35,7 +37,11 @@ pub fn build_app(state: AppState) -> Router {
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::OPTIONS])
         .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]);
 
-    let mut router = Router::new().route("/health", get(routes::health::health));
+    let mut router = Router::new()
+        .route("/health", get(routes::health::health))
+        .route("/auth/login", post(routes::auth::login))
+        .route("/auth/verify-2fa", post(routes::auth::verify_2fa))
+        .route("/auth/me", get(routes::auth::me));
 
     if state.config.is_development() {
         router = router.merge(dev_routes());
@@ -54,4 +60,5 @@ fn dev_routes() -> Router<AppState> {
     Router::new()
         .route("/seed/users", post(routes::seed::seed_users))
         .route("/dev/reset", post(routes::dev::reset))
+        .route("/dev/email-logs/latest", get(routes::dev::latest_email))
 }

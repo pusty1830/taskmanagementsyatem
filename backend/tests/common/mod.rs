@@ -79,3 +79,58 @@ pub async fn post(
 ) -> (StatusCode, Value) {
     send(app, Method::POST, path, token, Some(body)).await
 }
+
+pub const ADMIN_EMAIL: &str = "admin@example.com";
+pub const ADMIN_PASSWORD: &str = "Admin@12345";
+pub const JAMES_EMAIL: &str = "jamesbond@example.com";
+pub const JAMES_PASSWORD: &str = "JamesBond@007";
+
+pub async fn seed(app: &Router) {
+    let (status, _) = post(app, "/seed/users", None, serde_json::json!({})).await;
+    assert_eq!(status, StatusCode::OK, "seeding failed");
+}
+
+/// Step 1 of login: returns the login_challenge_id.
+pub async fn start_login(app: &Router, email: &str, password: &str) -> String {
+    let (status, body) = post(
+        app,
+        "/auth/login",
+        None,
+        serde_json::json!({ "email": email, "password": password }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "login failed: {body}");
+    body["login_challenge_id"].as_str().unwrap().to_string()
+}
+
+/// Reads the most recent verification code sent to `email` from the dev mailbox.
+pub async fn latest_code(app: &Router, email: &str) -> String {
+    let (status, body) = get(app, &format!("/dev/email-logs/latest?email={email}"), None).await;
+    assert_eq!(status, StatusCode::OK, "no dev email for {email}: {body}");
+    body["code"].as_str().unwrap().to_string()
+}
+
+pub async fn verify(app: &Router, challenge_id: &str, code: &str) -> (StatusCode, Value) {
+    post(
+        app,
+        "/auth/verify-2fa",
+        None,
+        serde_json::json!({ "login_challenge_id": challenge_id, "code": code }),
+    )
+    .await
+}
+
+/// Full login → dev mailbox → verify flow; returns the JWT.
+pub async fn login(app: &Router, email: &str, password: &str) -> String {
+    let challenge_id = start_login(app, email, password).await;
+    let code = latest_code(app, email).await;
+    let (status, body) = verify(app, &challenge_id, &code).await;
+    assert_eq!(status, StatusCode::OK, "verify failed: {body}");
+    body["access_token"].as_str().unwrap().to_string()
+}
+
+/// Returns a 6-digit code guaranteed to differ from `code`.
+pub fn wrong_code(code: &str) -> String {
+    let n: u32 = code.parse().unwrap();
+    format!("{:06}", (n + 1) % 1_000_000)
+}

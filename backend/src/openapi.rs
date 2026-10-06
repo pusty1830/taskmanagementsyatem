@@ -18,6 +18,10 @@ use crate::{error, routes};
         routes::health::health,
         routes::seed::seed_users,
         routes::dev::reset,
+        routes::dev::latest_email,
+        routes::auth::login,
+        routes::auth::verify_2fa,
+        routes::auth::me,
     ),
     components(schemas(
         error::ErrorResponse,
@@ -26,13 +30,19 @@ use crate::{error, routes};
         routes::seed::SeedResponse,
         routes::dev::MessageResponse,
         crate::dto::user::UserDto,
+        routes::dev::EmailLogDto,
         crate::domain::Role,
+        crate::dto::auth::LoginRequest,
+        crate::dto::auth::LoginResponse,
+        crate::dto::auth::Verify2faRequest,
+        crate::dto::auth::TokenResponse,
     )),
     modifiers(&BearerAuth),
     tags(
         (name = "health", description = "Liveness"),
         (name = "seed", description = "Create validation users (development only)"),
         (name = "dev", description = "Development helpers: dev mailbox, reset (development only)"),
+        (name = "auth", description = "Email + password login with email 2FA, then JWT"),
     )
 )]
 pub struct ApiDoc;
