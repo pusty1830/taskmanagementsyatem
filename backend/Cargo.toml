@@ -43,3 +43,10 @@ validator = { version = "0.20", features = ["derive"] }
 [dev-dependencies]
 http-body-util = "0.1"
 tower = { version = "0.5", features = ["util"] }
+
+# Argon2 is very slow unoptimized; keep debug builds and tests fast.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3

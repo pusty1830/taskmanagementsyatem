@@ -1,13 +1,18 @@
+pub mod auth;
 pub mod config;
+pub mod domain;
+pub mod dto;
 pub mod error;
 pub mod openapi;
+pub mod repositories;
 pub mod routes;
+pub mod services;
 pub mod state;
 
 use axum::{
     extract::DefaultBodyLimit,
     http::{header, HeaderValue, Method},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -30,11 +35,23 @@ pub fn build_app(state: AppState) -> Router {
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::OPTIONS])
         .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]);
 
-    Router::new()
-        .route("/health", get(routes::health::health))
+    let mut router = Router::new().route("/health", get(routes::health::health));
+
+    if state.config.is_development() {
+        router = router.merge(dev_routes());
+    }
+
+    router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(state)
+}
+
+/// Seed and dev helpers; mounted only when `APP_ENV=development`.
+fn dev_routes() -> Router<AppState> {
+    Router::new()
+        .route("/seed/users", post(routes::seed::seed_users))
+        .route("/dev/reset", post(routes::dev::reset))
 }

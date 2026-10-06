@@ -16,15 +16,23 @@ use crate::{error, routes};
     ),
     paths(
         routes::health::health,
+        routes::seed::seed_users,
+        routes::dev::reset,
     ),
     components(schemas(
         error::ErrorResponse,
         error::ErrorBody,
         routes::health::HealthResponse,
+        routes::seed::SeedResponse,
+        routes::dev::MessageResponse,
+        crate::dto::user::UserDto,
+        crate::domain::Role,
     )),
     modifiers(&BearerAuth),
     tags(
         (name = "health", description = "Liveness"),
+        (name = "seed", description = "Create validation users (development only)"),
+        (name = "dev", description = "Development helpers: dev mailbox, reset (development only)"),
     )
 )]
 pub struct ApiDoc;
